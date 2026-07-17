@@ -6,7 +6,7 @@ function connectToDB(){
         console.log("Server is connected to DB")
     })
     .catch(err=>{
-        console.log("Error connecting to DB")
+        console.log("Error connecting to DB",err)
         process.exit(1);
     })
 }

@@ -146,7 +146,6 @@ async function createInitialFundsTransaction(req, res) {
     }
 
     const fromUserAccount = await accountModel.findOne({
-        SystemUser: true,
         user: req.user._id
     })
 
@@ -156,9 +155,9 @@ async function createInitialFundsTransaction(req, res) {
         })
     }
 
-
+//Initiating a transaction session to ensure atomicity of the operations
     const session = await mongoose.startSession()
-    session.startTransaction()
+    session.startTransaction() // Start a new transaction session
 
     const transaction = new transactionModel({
         fromAccount: fromUserAccount._id,
@@ -173,7 +172,7 @@ async function createInitialFundsTransaction(req, res) {
         amount: amount,
         transaction: transaction._id,
         type: "DEBIT"
-    } ], { session })
+    } ], { session }) //{ session } ensures that the ledger entry is created within the same transaction session
 
     const creditLedgerEntry = await ledgerModel.create([ {
         account: toAccount,
@@ -183,9 +182,9 @@ async function createInitialFundsTransaction(req, res) {
     } ], { session })
 
     transaction.status = "COMPLETED"
-    await transaction.save({ session })
+    await transaction.save({ session }) // Save the transaction with the session (entries still waiting to be permannently saved to the database)
 
-    await session.commitTransaction()
+    await session.commitTransaction() // Commit the transaction to the database
     session.endSession()
 
     return res.status(201).json({

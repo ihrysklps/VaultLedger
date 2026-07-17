@@ -5,9 +5,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Email is required ofor creating a user"],
         trim: true,
-        lowecase: true,
+        lowercase: true,
         match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Invalid email format"],
-        uniquq: [true, "Entered email already exists"]
+        unique: [true, "Entered email already exists"]
     },
     name: {
         type: String,

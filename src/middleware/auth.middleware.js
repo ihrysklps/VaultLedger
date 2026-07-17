@@ -45,8 +45,8 @@ async function authSystemUserMiddleware(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
-
         const user = await userModel.findById(decoded.userId).select("+systemUser")
+        console.log(decoded.userId);
         if (!user.systemUser) {
             return res.status(403).json({
                 message: "Forbidden access, not a system user"
@@ -58,6 +58,7 @@ async function authSystemUserMiddleware(req, res, next) {
         return next()
     }
     catch (err) {
+        console.log(err)
         return res.status(401).json({
             message: "Unauthorized access, token is invalid"
         })

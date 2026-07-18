@@ -159,13 +159,13 @@ async function createInitialFundsTransaction(req, res) {
     const session = await mongoose.startSession()
     session.startTransaction() // Start a new transaction session
 
-    const transaction = new transactionModel({
-        fromAccount: fromUserAccount._id,
-        toAccount,
-        amount,
-        idempotencyKey,
-        status: "PENDING"
-    })
+    const transaction = (await transactionModel.create([ {
+            fromAccount,
+            toAccount,
+            amount,
+            idempotencyKey,
+            status: "PENDING"
+        } ], { session }))[ 0 ]
 
     const debitLedgerEntry = await ledgerModel.create([ {
         account: fromUserAccount._id,
@@ -173,6 +173,12 @@ async function createInitialFundsTransaction(req, res) {
         transaction: transaction._id,
         type: "DEBIT"
     } ], { session }) //{ session } ensures that the ledger entry is created within the same transaction session
+
+    await (() => {
+            return new Promise((resolve) => setTimeout(resolve, 15 * 1000)); /**
+             * Simulate a delay for the initial funds transaction
+             */
+        })()
 
     const creditLedgerEntry = await ledgerModel.create([ {
         account: toAccount,
@@ -182,7 +188,11 @@ async function createInitialFundsTransaction(req, res) {
     } ], { session })
 
     transaction.status = "COMPLETED"
-    await transaction.save({ session }) // Save the transaction with the session (entries still waiting to be permannently saved to the database)
+    await transactionModel.findOneAndUpdate(
+            { _id: transaction._id },
+            { status: "COMPLETED" },
+            { session }
+        )
 
     await session.commitTransaction() // Commit the transaction to the database
     session.endSession()

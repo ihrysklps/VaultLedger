@@ -186,8 +186,7 @@ async function createInitialFundsTransaction(req, res) {
         transaction: transaction._id,
         type: "CREDIT"
     } ], { session })
-
-    transaction.status = "COMPLETED"
+    
     await transactionModel.findOneAndUpdate(
             { _id: transaction._id },
             { status: "COMPLETED" },

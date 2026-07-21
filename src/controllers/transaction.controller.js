@@ -89,9 +89,11 @@ async function createTransactionController(req, res) {
     /**
      * Step 5: Create transaction (PENDING)
      */
+    let  transaction;
+    try{
     const session = await mongoose.startSession()
     session.startTransaction()
-    const transaction = await transactionModel.create({
+    transaction = await transactionModel.create({
         fromAccount,
         toAccount,
         idempotencyKey,
@@ -115,6 +117,13 @@ async function createTransactionController(req, res) {
 
     await session.commitTransaction()
     session.endSession
+   } catch (error) {
+
+        return res.status(400).json({
+            message: "Transaction is Pending due to some issue, please retry after sometime",
+        })
+
+    }
     /**
      * Step 10: Send email notification
      */
@@ -186,7 +195,7 @@ async function createInitialFundsTransaction(req, res) {
         transaction: transaction._id,
         type: "CREDIT"
     } ], { session })
-    
+
     await transactionModel.findOneAndUpdate(
             { _id: transaction._id },
             { status: "COMPLETED" },
